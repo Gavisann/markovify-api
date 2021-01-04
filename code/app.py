@@ -11,7 +11,7 @@ def create_responses(user = None):
     user = request.args.get('user')
     response_list = []
 
-    with open("/data/models/{0}.json".format(user)) as f:
+    with open("./data/models/{0}.json".format(user)) as f:
         model_json = json.load(f)
 
     f.close()
@@ -19,9 +19,12 @@ def create_responses(user = None):
     for x in range(5):
         #print(reconstituted_model.make_short_sentence(60))
         #print(reconstituted_model.make_sentence(tries=100, max_words=13))
-        response_list.append(reconstituted_model.make_sentence(tries=100, max_words=13))
+        temp = reconstituted_model.make_sentence(tries=100, max_words=13)
+        if (temp != None):
+            response_list.append(temp)
 
-    with open('/data/responses/{0}-responses.json'.format(user), 'w') as f:
+
+    with open('./data/responses/{0}-responses.json'.format(user), 'w') as f:
         json.dump(response_list, f)
     f.close()
 
@@ -34,7 +37,7 @@ def response():
     if len(responses) <= 1:
         create_responses(user)
 
-    with open('/data/responses/{0}-responses.json'.format(user), 'r+') as f:
+    with open('./data/responses/{0}-responses.json'.format(user), 'r+') as f:
 
         responses = json.load(f)
         out = responses.pop()
