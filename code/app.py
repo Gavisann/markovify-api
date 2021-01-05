@@ -2,13 +2,15 @@ import markovify
 import json
 from flask import Flask
 from flask import request
+import threading
+
 app = Flask(__name__)
+e = threading.Event()
 
 responses = []
 
-@app.route('/create-responses')
 def create_responses(user = None):
-    user = request.args.get('user')
+    
     response_list = []
 
     with open("/data/models/{0}.json".format(user)) as f:
@@ -16,26 +18,45 @@ def create_responses(user = None):
 
     f.close()
     reconstituted_model = markovify.Text.from_json(model_json)
-    for x in range(5):
+    x = 0
+    while x < 50:
         #print(reconstituted_model.make_short_sentence(60))
         #print(reconstituted_model.make_sentence(tries=100, max_words=13))
         temp = reconstituted_model.make_sentence(tries=100, max_words=13)
         if (temp != None):
             response_list.append(temp)
+            x += 1
+
 
 
     with open('/data/responses/{0}-responses.json'.format(user), 'w') as f:
         json.dump(response_list, f)
     f.close()
 
-    return "Output for {0} has been saved to file".format(user)
+    #return "Output for {0} has been saved to file".format(user)
+
+#def create_responses_thread(e):
+
+
+@app.route('/create-responses')
+def create_responses_route():
+    user = request.args.get('user')
+    t2 = threading.Thread(name='create_responses',
+                      target=create_responses,
+                      args=(user,))
+    t2.start()
+
 
 @app.route('/response')
 def response():
     user = request.args.get('user')
     global responses
-    if len(responses) <= 1:
-        create_responses(user)
+    
+    if len(responses) <= 10:
+        t2 = threading.Thread(name='create_responses',
+                      target=create_responses,
+                      args=(user,))
+        t2.start()
 
     with open('/data/responses/{0}-responses.json'.format(user), 'r+') as f:
 
@@ -45,6 +66,7 @@ def response():
         json.dump(responses, f)
         f.truncate()
     f.close()
+    print (len(responses))
     return out
     
 
