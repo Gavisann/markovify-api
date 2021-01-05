@@ -35,8 +35,6 @@ def create_responses(user = None):
 
     #return "Output for {0} has been saved to file".format(user)
 
-#def create_responses_thread(e):
-
 
 @app.route('/create-responses')
 def create_responses_route():
